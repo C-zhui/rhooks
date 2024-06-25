@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRendersCount } from 'react-use';
-import { useEffects } from '../hooks/effects';
+import { useEffects } from '../hooks/useEffects';
 
 function App() {
   const [cnt, setCount] = useState(0);

@@ -1,5 +1,4 @@
-import { memo, useMemo, useReducer, useState } from 'react';
-import './App.css';
+import { memo, useState } from 'react';
 import { useRendersCount } from 'react-use';
 import { createContainer } from '../hooks/container';
 
