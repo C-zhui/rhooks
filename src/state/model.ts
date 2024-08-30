@@ -69,7 +69,7 @@ interface InnerApi<S extends object, I extends object, E extends object> {
 interface ModelOption<S extends object, I extends object, E extends object> {
     name: string;
     state(): S;
-    setup: (api: InnerApi<S, I, E>) => (() => void) | void;
+    setup?: (api: InnerApi<S, I, E>) => (() => void) | void;
 }
 
 interface StateModel<S extends object, I extends object, E extends object> {
@@ -201,7 +201,7 @@ export function createModel<S extends object, I extends object, E extends object
             asyncFullState
         }
 
-         cleanup = option.setup(innerApi);
+        cleanup = option.setup?.(innerApi);
 
         return model;
     }
