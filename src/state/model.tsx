@@ -1,6 +1,10 @@
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Subject, distinctUntilChanged, map, of } from 'rxjs';
 import { EffectX } from './effectx';
 import { shallowReadonly } from '../utils/proxy';
+import { shallowEqual } from '../utils/equal';
+import { useMemo } from 'react';
+import { identity } from 'lodash-es';
+import { useObservableEagerState } from 'observable-hooks';
 
 function proxyKeyCreator(creator: (k: string) => any) {
     return new Proxy({} as any, {
@@ -24,7 +28,8 @@ function sealSubject(subject: Subject<any> & { [SYMBOL_SEAL]?: boolean }) {
     }
     subject[SYMBOL_SEAL] = true;
 
-    const warn = (words: string) => {
+    const warn = (_words: string) => {
+        
     };
 
     subject.next = () => {
@@ -66,10 +71,11 @@ interface InnerApi<S extends object, I extends object, E extends object> {
     effectx: EffectX;
 }
 
-interface ModelOption<S extends object, I extends object, E extends object> {
+interface ModelOption<S extends object, I extends object, E extends object, P = void, Shared = void> {
     name: string;
-    state(): S;
-    setup?: (api: InnerApi<S, I, E>) => (() => void) | void;
+    state(params: P): S;
+    static?: Shared
+    setup?: (api: InnerApi<S, I, E>, params: P) => (() => void) | void;
 }
 
 interface StateModel<S extends object, I extends object, E extends object> {
@@ -86,17 +92,23 @@ interface StateModel<S extends object, I extends object, E extends object> {
     asyncFullState: BehaviorSubject<S>;
 }
 
-export function createModel<S extends object, I extends object, E extends object>(option: ModelOption<S, I, E>) {
-    return function createInstance() {
-        let state = shallowReadonly(option.state());
+type ModelInstanceCreator<S extends object, I extends object, E extends object, P = void, Shared = void> = {
+    (params: P): StateModel<S, I, E>;
+    static: Shared;
+};
 
-        const events = proxyKeyCreator(k => new Subject());
+export function createModel<S extends object, I extends object, E extends object, P = void, Shared = void>(option: ModelOption<S, I, E, P, Shared>) {
+    type Creator = ModelInstanceCreator<S, I, E, P, Shared>;
+    function createInstance(params: P) {
+        let state = shallowReadonly(option.state(params));
+
+        const events = proxyKeyCreator(_k => new Subject());
         const emit = proxyKeyCreator(k => (evtData: any) => events[k].next(evtData));;
-        const actions = proxyKeyCreator(k => new Subject());
+        const actions = proxyKeyCreator(_k => new Subject());
         const dispatch = proxyKeyCreator(k => (actData: any) => actions[k].next(actData))
         const states = proxyKeyCreator(k => new BehaviorSubject((state as any)[k]));
         const asyncStates = proxyKeyCreator(k => new BehaviorSubject((state as any)[k]));
-        const updates = proxyKeyCreator(k => new Subject());
+        const updates = proxyKeyCreator(_k => new Subject());
 
         const asyncFullState = new BehaviorSubject(state);
         const fullState = new BehaviorSubject(state);
@@ -201,8 +213,36 @@ export function createModel<S extends object, I extends object, E extends object
             asyncFullState
         }
 
-        cleanup = option.setup?.(innerApi);
+        cleanup = option.setup?.(innerApi, params);
 
         return model;
     }
+    createInstance.static = option.static;
+    return createModel as any as Creator;
+}
+
+export function useModelState<S extends object>(
+    modelInstance: StateModel<S, any, any>,
+): S;
+export function useModelState<S extends object, R = S>(
+    modelInstance: StateModel<S, any, any>,
+    selector?: (v: S) => R,
+    eqFn?: (a: R, b: R) => boolean
+): R;
+
+export function useModelState<S extends object, R = S>(
+    modelInstance: StateModel<S, any, any>,
+    selector: (v: S) => R = identity,
+    eqFn: (a: R, b: R) => boolean = shallowEqual
+): R {
+    const obs = useMemo(
+        () =>
+            modelInstance
+                ? modelInstance.asyncFullState.pipe(map(selector), distinctUntilChanged(eqFn))
+                : of(null),
+
+        [modelInstance]
+    );
+
+    return useObservableEagerState(obs) as R;
 }

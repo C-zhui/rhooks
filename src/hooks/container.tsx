@@ -3,7 +3,7 @@ import React, { MutableRefObject, createContext, memo, useContext, useEffect, us
 import { unstable_batchedUpdates } from 'react-dom'
 import { BehaviorSubject } from 'rxjs';
 import { identity } from 'lodash-es';
-import { shallowEqual } from '../utils/shallowEqual';
+import { shallowEqual } from '../utils/equal';
 
 const EMPTY: unique symbol = Symbol();
 

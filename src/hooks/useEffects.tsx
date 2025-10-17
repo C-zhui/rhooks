@@ -1,6 +1,6 @@
 import { difference, intersection, isNil, keys, noop, pickBy, sortBy } from "lodash-es";
 import { DependencyList, EffectCallback, useEffect, useRef } from "react";
-import { shallowEqual } from "../utils/shallowEqual";
+import { shallowEqual } from "../utils/equal";
 
 
 type Effect = { effect: EffectCallback, deps?: DependencyList, order: number };

@@ -111,7 +111,7 @@ export function useGlobalEffect(
     gcTime: 10,
     staleTime: Infinity,
     queryFn(ctx) {
-      return new Promise(async (res, rej) => {
+      return new Promise(async (_res, rej) => {
         const dispose = await callback(ctx);
         if (ctx.signal.aborted) {
           dispose?.();

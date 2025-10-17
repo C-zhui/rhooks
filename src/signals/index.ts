@@ -1,11 +1,10 @@
 type Unsubscribe = (() => void) | void;
 
 const utils = {
-    noop: (...args: any[]) => { },
+    noop: (..._args: any[]) => { },
     createId: () => Math.random().toString().slice(2),
 };
 
-const log2 = console.log;
 const log = utils.noop || console.log;
 
 class Schedule {
@@ -105,7 +104,7 @@ abstract class EffectNode {
 }
 
 /** 原子状态 */
-class Signal<T> extends EffectNode {
+export class Signal<T> extends EffectNode {
     type = 'Signal';
 
     _value: T;
@@ -245,18 +244,3 @@ export function createEffect(effect: () => Unsubscribe, manual?: boolean) {
     return new Effect(effect, manual);
 }
 
-// const num = createSignal(1);
-// const num1 = createSignal(1);
-
-// const num2 = createComputed(() => num.value + 1);
-
-// createEffect(() => {
-//   console.log(num.value, num2.value);
-// });
-
-// setInterval(() => {
-//   Signal.batch(() => {
-//     num.value = num.value + 1;
-//     num1.value = num1.value + 1;
-//   });
-// }, 3000);

@@ -10,7 +10,7 @@ const CountContainer = createContainer((init: number = 0) => {
 
 const Demo = memo(() => {
   const [c, ref] = CountContainer.useContainer((s) => s.cntd10);
-  const [a, setA] = useState(1);
+  const [_a, setA] = useState(1);
   const cnt = useRendersCount();
   console.log('render demo', ref);
   return (
