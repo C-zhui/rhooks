@@ -23,7 +23,7 @@ export function shallowEqual(obj1: any, obj2: any) {
 
   // 处理都是 array 的情况
   if (isArray(obj1) && isArray(obj2)) {
-    return obj1.length === obj2.length && every(obj1, (_a, i) => obj1[i] === obj2[i]);
+    return obj1.length === obj2.length && every(obj1, (_a, i) => Object.is(obj1[i], obj2[i]));
   }
 
   // 如果非对象直接比较
@@ -51,5 +51,5 @@ export function shallowEqual(obj1: any, obj2: any) {
  */
 // eslint-disable-next-line @typescript-eslint/ban-types
 export const keysEqual = (keysIn: string[]) => (a: object, b: object) => {
-  shallowEqual(pick(a, keysIn), pick(b, keysIn));
+  return shallowEqual(pick(a, keysIn), pick(b, keysIn));
 };

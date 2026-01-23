@@ -117,7 +117,7 @@ const LogicTree = ({ node }: { node: IModelInstance<any> }) => {
     if (!isEqual(nextMergeState, node.mergeState.value)) {
       node.mergeState.next(nextMergeState);
     }
-  }, [ret]);
+  }, [state, ret]);
 
   const items = [...node.children.entries()];
 
@@ -187,8 +187,6 @@ export default function createModel<
           return mergeState.value;
         },
         useState<Ret = T & R>(selector?: (state: T & R) => Ret): Ret {
-          useForceUpdate();
-
           selector = selector || identity;
           const [v, set] = useState(() => selector(mergeState.value));
           useSubscription(

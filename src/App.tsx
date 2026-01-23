@@ -1,3 +1,3 @@
 import "./App.css";
-import App from "./example/objectHook";
+import App from "./example/test";
 export default App;
