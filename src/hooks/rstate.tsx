@@ -25,6 +25,7 @@ import {
 import { createContext, Fragment, memo, useMemo, useState } from "react"; // React 核心API
 import { identity } from "es-toolkit"; // 恒等函数，用于默认选择器
 import { shallowEqual } from "../utils/equal"; // 浅比较函数，用于性能优化
+import { inlineHook } from "./inlineHook";
 
 // 创建 Symbol 常量，用于内部属性名，避免外部误用
 const STATE = Symbol('state'); // 存储原始状态的 BehaviorSubject
@@ -397,11 +398,11 @@ class ModelInstance<T extends object, R extends object = T> {
     const children = this[CHILDREN].get(model) || [];
     const childIndex = children.findIndex((child) => child.id === id);
     if (childIndex !== -1) {
-      children.splice(childIndex, 1);
       // 发送子实例变更通知
-      this[CHILDREN_CHANGE].next();
       children[childIndex].parent = undefined;
       children[childIndex].destroy();
+      children.splice(childIndex, 1);
+      this[CHILDREN_CHANGE].next();
     }
   }
 
@@ -507,13 +508,20 @@ const LogicTree = memo(({ node }: { node: ModelInstance<any> }) => {
   // 递归渲染子实例
   return (
     <Context.Provider value={node}>
-      {items.map(([model, children]) => (
-        <Fragment key={model._id}>
-          {children.map((child) => (
-            <LogicTree key={child.id} node={child} />
-          ))}
-        </Fragment>
-      ))}
+      {items.map(([model, children]) =>
+        inlineHook(model._id, () => {
+
+          const childrenNodes = useMemo(() =>
+            <>
+              {children.map((child) => (
+                <LogicTree key={child.id} node={child} />
+              ))}
+            </>
+            , [children.length]);
+
+          return childrenNodes;
+        })
+      )}
     </Context.Provider>
   );
 });
