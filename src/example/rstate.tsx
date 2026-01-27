@@ -10,6 +10,7 @@ type TaskPriority = "low" | "medium" | "high";
 
 // 任务模型
 const TaskModel = createModel({
+  name: 'TaskModel',
   initState(id, param: { title: string; description: string; priority: TaskPriority; parentId?: string }) {
     return {
       id,
@@ -59,6 +60,7 @@ const TaskModel = createModel({
 
 // 项目模型
 const ProjectModel = createModel({
+  name: 'ProjectModel', 
   initState(id, param: { name: string; description: string }) {
     return {
       id,

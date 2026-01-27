@@ -19,11 +19,10 @@ import { BehaviorSubject, firstValueFrom, map, skip, Subject, tap } from "rxjs";
 import {
   useObservable, // 创建 Observable 的 Hook
   useObservableEagerState, // 立即获取 Observable 状态的 Hook
-  useObservableState, // 订阅 Observable 状态的 Hook
   useSubscription, // 管理 Observable 订阅的 Hook
 } from "observable-hooks"; // React 与 RxJS 的桥梁
-import { createContext, Fragment, memo, useMemo, useState } from "react"; // React 核心API
-import { identity } from "es-toolkit"; // 恒等函数，用于默认选择器
+import { createContext, memo, useMemo, useState } from "react"; // React 核心API
+import { identity } from "lodash-es"; // 恒等函数，用于默认选择器
 import { shallowEqual } from "../utils/equal"; // 浅比较函数，用于性能优化
 import { inlineHook } from "./inlineHook";
 
@@ -207,7 +206,7 @@ class ModelInstance<T extends object, R extends object = T> {
   /**
    * 子实例变更通知器
    */
-  [CHILDREN_CHANGE]: Subject<void>;
+  [CHILDREN_CHANGE]: BehaviorSubject<number>;
 
   /**
    * 计算属性钩子函数
@@ -257,7 +256,7 @@ class ModelInstance<T extends object, R extends object = T> {
     this.id = id;
     this[ALIVE] = true;
     this[CHILDREN] = new Map();
-    this[CHILDREN_CHANGE] = new Subject<void>();
+    this[CHILDREN_CHANGE] = new BehaviorSubject<number>(1);
     this[HOOK] = hook;
     this[STATE] = new BehaviorSubject<T>(initialState);
     this[MERGE_STATE] = new BehaviorSubject<T & R>(initialState as T & R);
@@ -384,7 +383,7 @@ class ModelInstance<T extends object, R extends object = T> {
     model: IModel<T1, P1, R1>
   ): ModelInstance<T1, R1>[] {
     // 订阅子实例变更
-    useObservableState(this[CHILDREN_CHANGE]);
+    useObservableEagerState(this[CHILDREN_CHANGE]);
     return this[CHILDREN].get(model) as ModelInstance<T1, R1>[] || [];
   }
 
@@ -402,7 +401,7 @@ class ModelInstance<T extends object, R extends object = T> {
       children[childIndex].parent = undefined;
       children[childIndex].destroy();
       children.splice(childIndex, 1);
-      this[CHILDREN_CHANGE].next();
+      this[CHILDREN_CHANGE].next(this[CHILDREN_CHANGE].value + 1);
     }
   }
 
@@ -432,7 +431,7 @@ class ModelInstance<T extends object, R extends object = T> {
 
     // 清理资源
     this[CHILDREN].clear();
-    this[CHILDREN_CHANGE].next();
+    this[CHILDREN_CHANGE].next(this[CHILDREN_CHANGE].value + 1);
     this[CHILDREN_CHANGE].complete();
     this[STATE].complete();
     this[MERGE_STATE].complete();
@@ -481,7 +480,7 @@ const emptyContext = createContext({} as any);
  */
 const LogicTree = memo(({ node }: { node: ModelInstance<any> }) => {
   // 订阅子实例变更
-  useObservableState(node[CHILDREN_CHANGE]);
+  const childrenVersion = useObservableEagerState(node[CHILDREN_CHANGE]);
   // 获取当前状态
   const state = useObservableEagerState(node[STATE]);
 
@@ -509,7 +508,7 @@ const LogicTree = memo(({ node }: { node: ModelInstance<any> }) => {
   return (
     <Context.Provider value={node}>
       {items.map(([model, children]) =>
-        inlineHook(model._id, () => {
+        inlineHook(`${model.name || 'AnonymousModel'}@${model._id}`, () => {
 
           const childrenNodes = useMemo(() =>
             <>
@@ -517,7 +516,7 @@ const LogicTree = memo(({ node }: { node: ModelInstance<any> }) => {
                 <LogicTree key={child.id} node={child} />
               ))}
             </>
-            , [children.length]);
+            , [childrenVersion]);
 
           return childrenNodes;
         })
@@ -525,6 +524,8 @@ const LogicTree = memo(({ node }: { node: ModelInstance<any> }) => {
     </Context.Provider>
   );
 });
+
+LogicTree.displayName = 'LogicTree';
 
 /**
  * 根容器引用
@@ -551,7 +552,7 @@ function ensureLogicTreeMounted() {
   rootContainer?.unmount();
   // 创建新的根容器并渲染 LogicTree
   rootContainer = createRoot(document.createElement("div"));
-  rootContainer.render(<LogicTree node={rootModelInstance} />);
+  rootContainer.render(<LogicTree node={rootModelInstance} key='_root' />);
 }
 
 /**
@@ -644,7 +645,7 @@ export default function createModel<
         const children = parent[CHILDREN].get(model) || [];
         children.push(instance);
         parent[CHILDREN].set(model, children);
-        parent[CHILDREN_CHANGE].next();
+        parent[CHILDREN_CHANGE].next(parent[CHILDREN_CHANGE].value + 1);
 
         return instance;
       } catch (error) {

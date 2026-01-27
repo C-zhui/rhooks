@@ -1,7 +1,7 @@
 import { BehaviorSubject, Subject, distinctUntilChanged, map, of } from 'rxjs';
-import { EffectX } from './effectx';
-import { shallowReadonly } from '../utils/proxy';
-import { shallowEqual } from '../utils/equal';
+import { EffectX } from '../effectx';
+import { shallowReadonly } from '../../utils/proxy';
+import { shallowEqual } from '../../utils/equal';
 import { useMemo } from 'react';
 import { identity } from 'lodash-es';
 import { useObservableEagerState } from 'observable-hooks';

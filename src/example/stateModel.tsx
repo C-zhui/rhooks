@@ -1,5 +1,5 @@
 import { Subscription, interval, retry, switchMap, tap } from 'rxjs';
-import { createModel, useModelState } from '../state/model';
+import { createModel, useModelState } from '../state/statex/statex2';
 import { useEffect, useState } from 'react';
 
 const CountdownModel = createModel<{
