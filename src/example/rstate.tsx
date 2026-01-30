@@ -60,7 +60,7 @@ const TaskModel = createModel({
 
 // 项目模型
 const ProjectModel = createModel({
-  name: 'ProjectModel', 
+  name: 'ProjectModel',
   initState(id, param: { name: string; description: string }) {
     return {
       id,
