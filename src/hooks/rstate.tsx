@@ -21,7 +21,7 @@ import {
   useObservableEagerState, // 立即获取 Observable 状态的 Hook
   useSubscription, // 管理 Observable 订阅的 Hook
 } from "observable-hooks"; // React 与 RxJS 的桥梁
-import { createContext, memo, useMemo, useRef, useState } from "react"; // React 核心API
+import { createContext, memo, useMemo, useState } from "react"; // React 核心API
 import { identity } from "lodash-es"; // 恒等函数，用于默认选择器
 import { shallowEqual } from "../utils/equal"; // 浅比较函数，用于性能优化
 import { inlineHook } from "./inlineHook";

@@ -362,7 +362,7 @@ export class StateX<T extends object = {}, E extends object = {}, A extends obje
   private _dispatching = false;
 
   /** 触发事件，只能内部触发 */
-  protected emit: <K extends keyof E>(eventName: K, data: E[K], emitMode?: EventEmitMode) => void;
+  protected emit: { [k in keyof E]: E[k] extends void ? () => void : (data: E[k], emitMode?: EventEmitMode) => void };
 
   /** 发送输入事件 */
   dispatch: { [k in keyof A]: A[k] extends void ? () => void : (data: A[k]) => void };
@@ -470,25 +470,35 @@ export class StateX<T extends object = {}, E extends object = {}, A extends obje
       }
     }) as any;
 
-    this.emit = (k, data, em) => {
-      if (this.checkDestroy()) {
-        return;
-      }
-      em = em || this.emitMode;
+    this.emit = new Proxy({} as any, {
+      get: (target, prop) => {
+        target[prop] =
+          target[prop] ||
+          ((data: any, em?: EventEmitMode) => {
+            if (this.checkDestroy()) {
+              return;
+            }
+            em = em || this.emitMode;
+            const eventHub = StateX.getAggregateEvent(cls) as Record<string, Subject<any>>;
 
-      const eventHub = StateX.getAggregateEvent(cls) as Record<string, Subject<any>>;
+            if (em === EventEmitMode.sync) {
+              (this.events as Record<string, Subject<any>>)[prop as string].next(data);
+              eventHub[prop as string].next({ id: this.instanceId, data });
+            } else {
+              nextTickTaskQueue.push(() => {
+                (this.events as Record<string, Subject<any>>)[prop as string].next(data);
+                eventHub[prop as string].next({ id: this.instanceId, data });
+              });
+              this.flushNextTickTaskQueue();
+            }
+          });
 
-      if (em === EventEmitMode.sync) {
-        (this.events as Record<string, Subject<any>>)[k as string].next(data);
-        eventHub[k as string].next({ id: this.instanceId, data });
-      } else {
-        nextTickTaskQueue.push(() => {
-          (this.events as Record<string, Subject<any>>)[k as string].next(data);
-          eventHub[k as string].next({ id: this.instanceId, data });
-        });
-        this.flushNextTickTaskQueue();
+        return target[prop];
+      },
+      set() {
+        return true;
       }
-    };
+    });
 
     this.actions = new Proxy({} as any, {
       get: (target, prop) => {
@@ -631,8 +641,7 @@ export class StateX<T extends object = {}, E extends object = {}, A extends obje
     if (this.isDestroyed() && !this._destroyedLogOnce && !withoutWarn) {
       this._destroyedLogOnce = true;
       stateXLogger.warn(
-        `still using ${(this.constructor as typeof StateX).stateName} instance (${
-          this.instanceId
+        `still using ${(this.constructor as typeof StateX).stateName} instance (${this.instanceId
         }) after destroyed, there must be a logic bug.`
       );
     }

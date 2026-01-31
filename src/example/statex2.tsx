@@ -68,6 +68,7 @@ export default function TestStateModel() {
     init: 10
   }));
 
+  
   const [number, setNumber] = useState(cdIns.state.count)
   const state = useModelState(cdIns)
   useEffect(() => {

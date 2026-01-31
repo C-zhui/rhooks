@@ -24,7 +24,7 @@ const TodoModel = createModel({
   },
   // 计算属性钩子
   hook: (api) => {
-    const { state } = api;
+    const { state, thisInstance } = api;
     const todoListIns = useContext(TodoListModel.Context);
 
     // 计算截止时间状态
@@ -46,6 +46,10 @@ const TodoModel = createModel({
     return {
       toggleComplete: async () => {
         await api.setState((prev) => ({ completed: !prev.completed }));
+        todoListIns.getHookState().refreshList();
+      },
+      deleteTodo: () => {
+        thisInstance.destroy();
         todoListIns.getHookState().refreshList();
       },
       status: state.completed ? "Completed" : "Pending",
@@ -114,6 +118,8 @@ const TodoItem = memo(function TodoItem({
   const dueDateStatus = todoInstance.useState((state) => state.dueDateStatus);
   // 切换完成状态
   const toggleComplete = todoInstance.useState((state) => state.toggleComplete);
+  // 删除 todo
+  const deleteTodo = todoInstance.useState((state) => state.deleteTodo);
 
   console.log({ toggleComplete, title, completed, status, dueDate, dueDateStatus });
 
@@ -150,7 +156,23 @@ const TodoItem = memo(function TodoItem({
             {title}
           </span>
         </div>
-        <span style={{ fontSize: "12px", color: "#666" }}>{status}</span>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <span style={{ fontSize: "12px", color: "#666", marginRight: "8px" }}>{status}</span>
+          <button
+            onClick={() => deleteTodo()}
+            style={{
+              fontSize: "12px",
+              padding: "2px 6px",
+              background: "#ff4757",
+              color: "white",
+              border: "none",
+              borderRadius: "3px",
+              cursor: "pointer",
+            }}
+          >
+            Delete
+          </button>
+        </div>
       </div>
       {dueDate && (
         <div style={{ fontSize: "12px", color: "#999", marginTop: "4px" }}>
