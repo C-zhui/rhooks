@@ -1,4 +1,5 @@
 import PriorityQueue from './index';
+import { test, expect } from 'vitest'
 
 test('int queue', () => {
   const q = PriorityQueue((a, b) => a > b, [5, 1, 2, 3, 4, 6]);

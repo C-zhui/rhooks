@@ -35,7 +35,7 @@ const CHILDREN = Symbol("children"); // 存储子实例的映射
 const CHILDREN_CHANGE = Symbol("childrenChange"); // 子实例变更通知器
 const HOOK = Symbol("hook"); // 计算属性钩子函数
 const SYNC = Symbol("sync"); // 同步计算属性钩子函数
-const SET_STATE = Symbol("setState"); // 同步计算属性钩子函数
+export const SET_STATE = Symbol("setState"); // 同步计算属性钩子函数
 
 /**
  * 钩子函数 API 接口
@@ -423,6 +423,19 @@ class ModelInstance<T extends object, R extends object = T> {
   }
 
   /**
+   * 移除所有子实例
+   */
+  removeAllChildren(Model?: IModel<any, any, any>): void {
+    if (Model) {
+      this[CHILDREN].delete(Model);
+      this[CHILDREN_CHANGE].next(this[CHILDREN_CHANGE].value + 1);
+    } else {
+      this[CHILDREN].clear();
+      this[CHILDREN_CHANGE].next(this[CHILDREN_CHANGE].value + 1);
+    }
+  }
+
+  /**
    * 更新合并状态
    *
    * @param newMergeState - 新的合并状态
@@ -592,6 +605,10 @@ export function destroyAll() {
   rootModelInstance = createRootInstance();
 }
 
+export function clearAll() {
+  rootModelInstance.removeAllChildren();
+}
+
 /**
  * 创建模型定义
  *
@@ -638,6 +655,8 @@ export default function createModel<
      * @returns 模型实例
      */
     create(id: string, param: P, parent?: ModelInstance<any>) {
+      // ensureLogicTreeMounted();
+
       // 默认使用根实例作为父实例
       if (!parent) {
         parent = rootModelInstance;

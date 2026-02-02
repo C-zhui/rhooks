@@ -685,3 +685,4 @@ export class StateX<T extends object = {}, E extends object = {}, A extends obje
     stateHub.delete(this.instanceId);
   }
 }
+
