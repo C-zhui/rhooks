@@ -11,10 +11,6 @@ function Hook({ fn }: { fn: () => any }) {
     return isValidElement(res) ? res : null;
 }
 
-export function renderJsx(fn: () => ReactNode) {
-    return fn();
-}
-
 const NullComponent = () => null;
 /**
  * 挂载 hook，当你不想为它写一个组件或者不知挂哪个组件上的时候

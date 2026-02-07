@@ -12,6 +12,13 @@ const tasks = PriorityQueue<Task>(
 const THRESHOLD = 14;
 
 let order = 0;
+function nextOrder() {
+  order++;
+  if (order === Number.MAX_SAFE_INTEGER) {
+    order = 1;
+  }
+  return order;
+}
 
 function getTime() {
   return performance.now();
@@ -38,7 +45,7 @@ function generatorResolve(item: Task, res: IteratorResult<any, any>) {
     item.endTime = Date.now();
     item.duration = item.endTime - item.startTime;
   } else {
-    item.id = order++;
+    item.id = nextOrder();
     tasks.push(item);
   }
 
@@ -71,7 +78,7 @@ async function flush(_t: number) {
     if (item.p < 0) {
       item.p += item.priority;
     }
-    item.cnt++;
+    // item.cnt++;
 
     if (item.g || isGenerator(item.fn) || isAsyncGenerator(item.fn)) {
       if (item.canceled) {
@@ -83,7 +90,7 @@ async function flush(_t: number) {
       }
 
       try {
-        const res = item.g!.next(item.val);
+        const res: any = item.g!.next(item.val);
 
         if (res?.then) {
           // async gen
@@ -131,6 +138,7 @@ async function flush(_t: number) {
 
 export interface RetType<T> extends PromiseLike<T> {
   cancel: () => void;
+  task: Task;
 }
 
 export function scheduleTask<T = any>(
@@ -153,7 +161,7 @@ export function scheduleTask<T = any>(
 ): RetType<T> {
   let t: Task;
 
-  const p: RetType<T> = new Promise<T>((resolve, reject) => {
+  const ret: RetType<T> = new Promise<T>((resolve, reject) => {
     tasks.push(
       (t = {
         name,
@@ -166,7 +174,7 @@ export function scheduleTask<T = any>(
         onRejected,
         p: priority || 0,
         priority: priority || 1,
-        id: order++,
+        id: nextOrder(),
         fn: callback,
         resolver: resolve,
         rejecter: reject,
@@ -175,14 +183,17 @@ export function scheduleTask<T = any>(
     tryRun();
   }) as any;
 
-  p.cancel = () => (t.canceled = true);
+  ret.cancel = () => (t.canceled = true);
+  // @ts-ignore
+  ret.task = t;
+
   if (signal) {
     const abort = () => {
-      p.cancel();
+      ret.cancel();
       signal.removeEventListener("abort", abort);
     };
     signal.addEventListener("abort", abort);
   }
 
-  return p;
+  return ret;
 }

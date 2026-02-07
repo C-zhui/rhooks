@@ -1,29 +1,50 @@
 import React, { Suspense, ComponentType } from "react";
 import "./App.css";
-import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  NavLink,
+} from "react-router-dom";
 
 // 导入所有 example 组件
-const ComponentObservableDiv = React.lazy(() => import("./example/component_obversablediv"));
+const ComponentObservableDiv = React.lazy(
+  () => import("./example/component_obversablediv"),
+);
 const Container = React.lazy(() => import("./example/container"));
 const Effects = React.lazy(() => import("./example/effects"));
-const EmotionObservable = React.lazy(() => import("./example/emotion_observable"));
+const EmotionObservable = React.lazy(
+  () => import("./example/emotion_observable"),
+);
 const RState = React.lazy(() => import("./example/rstate"));
 const RState2 = React.lazy(() => import("./example/rstate2"));
 const Signal = React.lazy(() => import("./example/signal"));
 const StateModel = React.lazy(() => import("./example/statex2"));
 const Test = React.lazy(() => import("./example/test"));
+const SchedulerTest = React.lazy(() => import("./example/scheduler"));
+const Hox = React.lazy(() => import("./example/hox"));
 
 // 路由配置
 const routes = [
-  { path: "/component-obversablediv", element: <ComponentObservableDiv />, label: "Component ObservableDiv" },
+  {
+    path: "/component-obversablediv",
+    element: <ComponentObservableDiv />,
+    label: "Component ObservableDiv",
+  },
   { path: "/container", element: <Container />, label: "Container" },
   { path: "/effects", element: <Effects />, label: "Effects" },
-  { path: "/emotion-observable", element: <EmotionObservable />, label: "Emotion Observable" },
+  {
+    path: "/emotion-observable",
+    element: <EmotionObservable />,
+    label: "Emotion Observable",
+  },
   { path: "/rstate", element: <RState />, label: "RState" },
   { path: "/rstate2", element: <RState2 />, label: "RState 2 (Todo List)" },
   { path: "/signal", element: <Signal />, label: "Signal" },
   { path: "/state-model", element: <StateModel />, label: "State Model" },
   { path: "/test", element: <Test />, label: "Test" },
+  { path: "/scheduler", element: <SchedulerTest />, label: "Scheduler Test" },
+  { path: "/hox", element: <Hox />, label: "Hox" },
 ];
 
 export default function App() {
@@ -36,7 +57,10 @@ export default function App() {
           <ul className="nav-list">
             {routes.map((route) => (
               <li key={route.path}>
-                <NavLink to={route.path} className={({ isActive }) => isActive ? "active" : ""}>
+                <NavLink
+                  to={route.path}
+                  className={({ isActive }) => (isActive ? "active" : "")}
+                >
                   {route.label}
                 </NavLink>
               </li>
@@ -52,7 +76,11 @@ export default function App() {
               <Route path="/" element={<RState2 />} />
               {/* 其他路由 */}
               {routes.map((route) => (
-                <Route key={route.path} path={route.path} element={route.element} />
+                <Route
+                  key={route.path}
+                  path={route.path}
+                  element={route.element}
+                />
               ))}
             </Routes>
           </Suspense>

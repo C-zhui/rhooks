@@ -1,3 +1,8 @@
+/**
+ * 生成数组的全排列
+ */
+
+// 基于生成器
 function* permutation(nums: number[]): Generator<number[]> {
   if (nums.length <= 1) {
     yield nums;
@@ -11,6 +16,7 @@ function* permutation(nums: number[]): Generator<number[]> {
   }
 }
 
+// 基于递归
 function permutation2(nums: number[]): number[][] {
   function dfs(ns: number[]): number[][] {
     if (ns.length === 1) {
@@ -36,6 +42,28 @@ function swap(arr: number[], i: number, j: number) {
   [arr[i], arr[j]] = [arr[j], arr[i]];
 }
 
+function flip(arr: number[], i: number, j: number) {
+  while (i < j) {
+    swap(arr, i++, j--);
+  }
+}
+
+function rotateRight(arr: number[], i: number, j: number) {
+  const p = arr[j];
+  for (let k = j; k > i; k--) {
+    arr[k] = arr[k - 1];
+  }
+  arr[i] = p;
+}
+
+function rotateLeft(arr: number[], i: number, j: number) {
+  const p = arr[i];
+  for (let k = i; k < j; k++) {
+    arr[k] = arr[k + 1];
+  }
+  arr[j] = p;
+}
+
 // 可以得到组合，但是顺序不对
 function permutation3(nums: number[]): number[][] {
   const result = [] as number[][];
@@ -46,9 +74,9 @@ function permutation3(nums: number[]): number[][] {
     }
 
     for (let j = i; j < ns.length; j++) {
-      swap(ns, i, j);
+      rotateRight(ns, i, j);
       dfs(ns, i + 1);
-      swap(ns, i, j);
+      rotateLeft(ns, i, j);
     }
   }
 
@@ -57,30 +85,12 @@ function permutation3(nums: number[]): number[][] {
   return result;
 }
 
-function rotate(arr: number[], i: number, j: number) {
-  const p = arr[i];
-  for (let k = i; k < j; k++) {
-    arr[k] = arr[k + 1];
-  }
-  arr[j] = p;
+function print(nums: number[][]) {
+  nums.forEach(e => {
+    console.log(`[${e.join(',')}]`);
+  })
 }
 
-function permutation4(nums: number[]): number[][] {
-  const result = [] as number[][];
 
-  function dfs(ns: number[], i: number) {
-    for (let j = i; j < ns.length; j++) {
-      rotate(ns, i, j);
-      dfs(ns, i + 1);
-      swap(ns, i, j);
-    }
-  }
-
-  dfs(nums, 0);
-
-  return result;
-}
-
-// console.log(permutation2([1, 2, 3, 4, 5]));
-console.log(permutation4([1, 2, 3, 4, 5]));
-console.log([...permutation([1, 2, 3, 4, 5])]);
+// print(permutation3([1, 2, 3, 4, 5]));
+print([...permutation([1, 2, 3, 4, 5])]);

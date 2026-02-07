@@ -436,15 +436,6 @@ class ModelInstance<T extends object, R extends object = T> {
   }
 
   /**
-   * 更新合并状态
-   *
-   * @param newMergeState - 新的合并状态
-   */
-  updateMergeState(newMergeState: T & R): void {
-    this[MERGE_STATE].next(newMergeState);
-  }
-
-  /**
    * 销毁模型实例
    *
    * 递归销毁所有子实例，清理资源，并从父实例中移除
@@ -525,7 +516,7 @@ const LogicTree = memo(({ node }: { node: ModelInstance<any> }) => {
   useMemo(() => {
     const nextMergeState = { ...node.getState(), ...ret };
     if (!shallowEqual(nextMergeState, node.getHookState())) {
-      node.updateMergeState(nextMergeState);
+      node[MERGE_STATE].next(nextMergeState);
     }
 
     // 标记实例初始化完成
@@ -726,4 +717,19 @@ export default function createModel<
   Object.freeze(model);
 
   return model;
+}
+
+export function createSingleton<
+  T extends object,
+  P extends object,
+  R extends object,
+>(option: IModelOption<T, P, R>): (param: P) => ModelInstance<T, R> {
+  const model = createModel(option);
+
+  const originCreate = model.create;
+
+  const create = (param: P) =>
+    model.get("singleton") || originCreate("singleton", param);
+
+  return create;
 }

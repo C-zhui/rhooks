@@ -20,19 +20,6 @@ function* fib(n: number): Generator<void, BigInt, void> {
   }
 }
 
-function* b() {
-  yield "b1";
-  yield "b2";
-  return "b3";
-}
-
-function* a() {
-  yield "a1";
-  const bv = yield* b();
-  console.log({ bv });
-  return "a2";
-}
-
 scheduleTask(fib.bind(null, 35), {
   name: "a",
   priority: 2,
@@ -44,7 +31,7 @@ scheduleTask(fib.bind(null, 35), {
   },
 });
 
-scheduleTask(fib.bind(null, 35), {
+const b = scheduleTask(fib.bind(null, 35), {
   name: "b",
   priority: 1,
   onSchedule(task) {
@@ -66,7 +53,7 @@ scheduleTask(fib.bind(null, 35), {
   },
 });
 
-scheduleTask(fib.bind(null, 35), {
+const d = scheduleTask(fib.bind(null, 35), {
   name: "d",
   priority: 1,
   onSchedule(task) {
@@ -76,3 +63,16 @@ scheduleTask(fib.bind(null, 35), {
     console.log(task);
   },
 });
+
+setTimeout(() => {
+  b.cancel();
+  d.cancel();
+  console.log({
+    b,
+    d,
+  });
+}, 2000);
+
+export default function App() {
+  return <div>nothing</div>;
+}

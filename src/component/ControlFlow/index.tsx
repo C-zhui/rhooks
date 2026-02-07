@@ -1,5 +1,5 @@
-import { isFunction } from 'lodash-es';
-import React, { FC, ReactElement } from 'react';
+import { isFunction } from "lodash-es";
+import React, { FC, ReactElement } from "react";
 
 export const IfThen = (props: {
   condition?: boolean;
@@ -9,30 +9,30 @@ export const IfThen = (props: {
   if (props.condition) {
     return isFunction(props.then) ? props.then() : props.then;
   }
-  return isFunction(props.else) ? props.else() : props.else ?? null;
+  return isFunction(props.else) ? props.else() : (props.else ?? null);
 };
 
 export const SwitchCase = (props: {
   conditions: [
     boolean | (() => boolean),
-    ReactElement | (() => ReactElement)
+    ReactElement | (() => ReactElement),
   ][];
 }) => {
   const { conditions } = props;
   for (const item of conditions) {
     const [condition, then] = item;
-    if (isFunction(condition) && condition()) {
+    if (isFunction(condition) ? condition() : condition) {
       return isFunction(then) ? then() : then;
     }
   }
   return null;
 };
 
-export const ForList: FC<{
-  list: any[];
-  getKey?: (item: any, index: number) => string;
-  renderItem: (item: any, index: number) => ReactElement;
-}> = (props) => {
+export const ForList = <T,>(props: {
+  list: T[];
+  getKey?: (item: T, index: number) => string;
+  renderItem: (item: T, index: number) => ReactElement;
+}) => {
   const { list, getKey, renderItem } = props;
 
   return (
@@ -40,9 +40,8 @@ export const ForList: FC<{
       {list.map((item, index) =>
         React.cloneElement(renderItem(item, index), {
           key: getKey ? getKey(item, index) : index,
-        })
+        }),
       )}
     </>
   );
 };
-
