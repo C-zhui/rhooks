@@ -1,8 +1,8 @@
-import { useCreation, usePrevious } from "ahooks";
+import { usePrevious } from "ahooks";
 import { sortBy } from "lodash-es";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 
-function useStableCallback<T extends CallableFunction>(callback: T): T {
+export function useStableCallback<T extends CallableFunction>(callback: T): T {
   const ref = useRef(callback);
   ref.current = callback;
   return useCallback(
@@ -14,7 +14,7 @@ function useStableCallback<T extends CallableFunction>(callback: T): T {
 export function useStableApis<T extends Record<string, CallableFunction>>(
   apis: T,
 ): T {
-  const stableApis = useCreation(() => ({}) as T, []);
+  const [stableApis] = useState({} as T);
 
   const prevApis = usePrevious(apis);
 

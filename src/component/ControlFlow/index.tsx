@@ -30,7 +30,7 @@ export const SwitchCase = (props: {
 
 export const ForList = <T,>(props: {
   list: T[];
-  getKey?: (item: T, index: number) => string;
+  getKey?: (item: T, index: number) => string | number;
   renderItem: (item: T, index: number) => ReactElement;
 }) => {
   const { list, getKey, renderItem } = props;

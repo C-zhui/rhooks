@@ -38,16 +38,6 @@ function permutation2(nums: number[]): number[][] {
   return dfs(nums);
 }
 
-function swap(arr: number[], i: number, j: number) {
-  [arr[i], arr[j]] = [arr[j], arr[i]];
-}
-
-function flip(arr: number[], i: number, j: number) {
-  while (i < j) {
-    swap(arr, i++, j--);
-  }
-}
-
 function rotateRight(arr: number[], i: number, j: number) {
   const p = arr[j];
   for (let k = j; k > i; k--) {
@@ -64,7 +54,6 @@ function rotateLeft(arr: number[], i: number, j: number) {
   arr[j] = p;
 }
 
-// 可以得到组合，但是顺序不对
 function permutation3(nums: number[]): number[][] {
   const result = [] as number[][];
   function dfs(ns: number[], i: number) {

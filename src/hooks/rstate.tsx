@@ -21,11 +21,12 @@ import {
   useObservableEagerState, // 立即获取 Observable 状态的 Hook
   useSubscription, // 管理 Observable 订阅的 Hook
 } from "observable-hooks"; // React 与 RxJS 的桥梁
-import { createContext, memo, useMemo, useState } from "react"; // React 核心API
+import { createContext, memo, Suspense, useMemo, useState } from "react"; // React 核心API
 import { identity } from "lodash-es"; // 恒等函数，用于默认选择器
 import { shallowEqual } from "../utils/equal"; // 浅比较函数，用于性能优化
 import { inlineHook } from "./inlineHook";
 import { useLatest } from "react-use";
+import { DeferPromise, dPromise } from "../utils/dPromise";
 
 // 创建 Symbol 常量，用于内部属性名，避免外部误用
 const STATE = Symbol("state"); // 存储原始状态的 BehaviorSubject
@@ -243,12 +244,7 @@ class ModelInstance<T extends object, R extends object = T> {
   /**
    * 实例初始化完成的 Promise
    */
-  inited: Promise<boolean> | boolean;
-
-  /**
-   * 完成初始化的回调函数
-   */
-  toInit: CallableFunction;
+  inited: DeferPromise<boolean>;
 
   [SYNC]: Subject<void>;
 
@@ -272,12 +268,7 @@ class ModelInstance<T extends object, R extends object = T> {
     this[SYNC] = new Subject<void>();
 
     // 创建初始化 Promise
-    const a = Promise.withResolvers<boolean>();
-    this.inited = a.promise;
-    this.toInit = () => {
-      a.resolve(true);
-      this.inited = true;
-    };
+    this.inited = dPromise<boolean>();
   }
 
   /**
@@ -341,7 +332,7 @@ class ModelInstance<T extends object, R extends object = T> {
    * @returns 选择后的状态值
    */
   useState<Ret = T & R>(selector?: (state: T & R) => Ret): Ret {
-    if (this.inited !== true) {
+    if (this.inited.value !== true) {
       throw this.inited;
     }
 
@@ -520,7 +511,7 @@ const LogicTree = memo(({ node }: { node: ModelInstance<any> }) => {
     }
 
     // 标记实例初始化完成
-    node.toInit(true);
+    node.inited.set(true);
     node[SYNC].next();
   }, [node, state, ret]); // 依赖项：node, state, ret
 
@@ -579,7 +570,11 @@ function ensureLogicTreeMounted() {
   rootContainer?.unmount();
   // 创建新的根容器并渲染 LogicTree
   rootContainer = createRoot(document.createElement("div"));
-  rootContainer.render(<LogicTree node={rootModelInstance} key="_root" />);
+  rootContainer.render(
+    <Suspense fallback={null}>
+      <LogicTree node={rootModelInstance} key="_root" />
+    </Suspense>,
+  );
 }
 
 /**
@@ -719,17 +714,12 @@ export default function createModel<
   return model;
 }
 
-export function createSingleton<
-  T extends object,
-  P extends object,
-  R extends object,
->(option: IModelOption<T, P, R>): (param: P) => ModelInstance<T, R> {
+export function createSingleton<T extends object, R extends object>(
+  option: IModelOption<T, {}, R>,
+): ModelInstance<T, R> {
   const model = createModel(option);
 
-  const originCreate = model.create;
+  const create = () => model.get("singleton") || model.create("singleton", {});
 
-  const create = (param: P) =>
-    model.get("singleton") || originCreate("singleton", param);
-
-  return create;
+  return create();
 }

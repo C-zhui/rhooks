@@ -1,10 +1,10 @@
-import React, { CSSProperties, FC, useState } from 'react';
+import React, { CSSProperties, FC, ReactNode, useState } from 'react';
 import { useDebounce, useWindowSize } from 'react-use';
 
 export const SCREEN_WIDTH = 1920;
 export const SCREEN_HEIGHT = 1080;
 
-const ScreenAdapter: FC<{ style?: CSSProperties }> = ({ style, children }) => {
+const ScreenAdapter: FC<{ style?: CSSProperties, children?: ReactNode }> = ({ style, children }) => {
   const { width, height } = useWindowSize();
   const getScale = () => {
     const w = window.innerWidth / SCREEN_WIDTH;

@@ -1,4 +1,4 @@
-type DeferPromise<T> = Promise<T> & {
+export type DeferPromise<T> = Promise<T> & {
   value: T;
   error: Error;
   set: (v: T) => void;
